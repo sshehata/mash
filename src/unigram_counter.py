@@ -5,10 +5,14 @@ Created on Apr 8, 2015
 '''
 
 from data import DataObject
+import re
 
 class UnigramCounter(object):
     '''
-    classdocs
+    Type: Node
+    Function: Counts unigrams in text.
+    Input port requirements: RAW_TEXT
+    Output port promises: UNIGRAMS
     '''
 
 
@@ -24,9 +28,14 @@ class UnigramCounter(object):
         records = data.records
         u = DataObject([])
         unigrams = u.records
+        delimiters = " ", ".", ","
+        regex_pattern = '|'.join(map(re.escape, delimiters))
         for i in range(len(records)):
             unigrams.append(dict())
-            for word in records[i].split(" "):
+            #print re.split(regex_pattern,records[i])
+            for word in re.split(regex_pattern,records[i]):
+                if word == "":
+                    continue
                 if not unigrams[i].has_key(word):
                     unigrams[i][word] = 1
                 else:    
