@@ -7,8 +7,8 @@ class DataObject:
         self.records = records
         self.flags = set()
 
-    def add_flag(flag):
+    def add_flag(self, flag):
         self.flags.add(flag)
 
-    def check_flag(flag):
+    def check_flag(self, flag):
         return flag in self.flags
