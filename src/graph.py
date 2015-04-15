@@ -17,20 +17,21 @@ class RemoveUrls:
   def run(self):
     data = self.input_port.get()
     records = data.records
-    records = [re.sub(RemoveUrls.URL_REGEX, "URL", record) for record in
-        records]
+    recorde = [re.sub(RemoveUrls.URL_REGEX, "URL", record) for record in records]
     self.output_port.update(data)
 
 class Port:
-  #TODO Update the active set of flags
+  # TODO Update the active set of flags
+
   def __init__(self, required_flags):
-    self.required_flags = required_flags    #To check compatibility between ports Ex:
-                                              #POS_TAGGED, TOKENIZED
+    # To check compatibility between ports Ex:
+    self.required_flags = required_flags
+    #POS_TAGGED, TOKENIZED
 
   def get(self):
+    if not self.data:
+      raise Exception, "Port contains no data"
     return self.data
 
   def update(self, data):
     self.data = data
-
-
