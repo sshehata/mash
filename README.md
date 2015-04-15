@@ -1,20 +1,6 @@
 # mash
 Sentiment Analysis framework written in python!
 
-<<<<<<< HEAD
-- split dataset
-- tokenizer
-- remove mentions
-- process hashtags
-- remove urls
-- POS tagging
-- unigram counter
-- remove stop words
-- summarizier
-- naiver bayes classifier
-- accuracy evaluater
-- filter spam
-=======
   - read raw text (array of records)
   - split dataset
   - tokenizer (array of records, each array of tokens)
@@ -28,7 +14,6 @@ Sentiment Analysis framework written in python!
   - naiver bayes classifier
   - accuracy evaluater
   - duplicator
->>>>>>> 196230f8ca66480b26d874bff34d78576b8ce9f9
 
   Design Decision:
   - Port carries one data object
