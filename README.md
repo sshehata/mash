@@ -12,6 +12,7 @@ Sentiment Analysis framework written in python!
 - summarizier
 - naiver bayes classifier
 - accuracy evaluater
+- filter spam
 
 Design Decision:
 - Port carries one data object
