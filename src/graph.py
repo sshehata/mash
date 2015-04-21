@@ -1,4 +1,5 @@
-import re
+import re, nltk
+from decorators import run_once
 
 class RemoveUrls:
   """
@@ -21,6 +22,32 @@ class RemoveUrls:
 
   def get_ouput_ports(self):
     return [self.output_port]
+
+class Summarizer:
+  """
+  Type: Node
+  Function: Summarizes tokenized records into most useful.
+  Input port requirements: TOKENIZED
+  Output port promises: no changes
+  """
+
+  def __init__(self, records_port, labels_port, unigram_count=150):
+    self.records_port = records_port
+    self.labels_port = labels_port
+    self.tokens_port = Port([], self.run)
+    self.unigram_count = unigram_count
+
+  @run_once
+  def run(self):
+    records = self.records_port.get()
+    labels = self.labels_port.get()
+    dist = nltk.FreqDist(token for record in records for token in record if \
+        token not in nltk.corpus.stopwords.words(english) and token.isalpha())
+    self.tokens_port.update([word for word, count in \
+        dist.most_common(self.unigram_count)])
+
+  def get_ouput_ports(self):
+    return [self.tokens_port]
 
 
 class Port:
