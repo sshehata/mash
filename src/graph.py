@@ -40,3 +40,28 @@ class Port:
 
   def update(self, data):
     self.data = data
+
+class NaiveBayes_model:
+  def __init__(self, training_set):
+    self.training_set = training_set
+    self.model = Port([], self.run)
+
+  def run(self):
+    self.model.update(nltk.NaiveBayesClassifier.train(training_set.get()))
+
+  def get_output_ports(self):
+    return [self.model]
+
+class NaiveBayes_classifier:
+  def __init__(self, model, data):
+    self.model = model
+    self.data = data
+    self.labels = Port([], self.run)
+
+    def run(self):
+      model = self.model.get()
+      records = self.data.get()
+      self.labels.update([model.classify(record) for record in records])
+
+    def get_output_ports(self):
+      return [self.labels]
