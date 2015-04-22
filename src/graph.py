@@ -22,25 +22,6 @@ class RemoveUrls:
   def get_ouput_ports(self):
     return [self.output_port]
 
-
-class Port:
-  # TODO Update the active set of flags
-
-  def __init__(self, required_flags, ex_func):
-    # To check compatibility between ports Ex:
-    self.required_flags = required_flags
-    self.ex_func = ex_func
-    self.data = None
-    #POS_TAGGED, TOKENIZED
-
-  def get(self):
-    if not self.data:
-        self.ex_func()
-    return self.data
-
-  def update(self, data):
-    self.data = data
-
 class NaiveBayes_model:
   def __init__(self, training_set):
     self.training_set = training_set
@@ -65,3 +46,21 @@ class NaiveBayes_classifier:
 
     def get_output_ports(self):
       return [self.labels]
+
+class Port:
+  # TODO Update the active set of flags
+
+  def __init__(self, required_flags, ex_func):
+    # To check compatibility between ports Ex:
+    self.required_flags = required_flags
+    self.ex_func = ex_func
+    self.data = None
+    #POS_TAGGED, TOKENIZED
+
+  def get(self):
+    if not self.data:
+        self.ex_func()
+    return self.data
+
+  def update(self, data):
+    self.data = data
