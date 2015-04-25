@@ -17,15 +17,19 @@ class RemoveUrls:
 
   def __init__(self, input_port):
     self.input_port = input_port
-    self.output_ports = {'training_set': Port([]. self.run)}
+    self.training_set = Port([], self.run)
+    self.output_ports = {'training_set': self.training_set}
 
   def run(self):
     records = self.input_port.get()
     records = [re.sub(RemoveUrls.URL_REGEX, "URL", record)
                for record in records]
-    self.output_port.update(records)
+    self.training_set.update(records)
 
-  def get_output_ports(self, port):
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
     return self.output_ports[port]
 
 class SVM_model:
@@ -34,6 +38,7 @@ class SVM_model:
     self.training_set_port = training_set_port
     self.labels_port = labels_port
     self.model_port = Port([], self.run)
+    self.output_ports = {'model': self.model_port }
 
   def run(self):
     training_set = self.training_set_port.get()
@@ -42,7 +47,10 @@ class SVM_model:
     self.model_port.update(classif.train(zip(training_set, labels)))
 
   def get_output_ports(self):
-    return [self.model_port]
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
 
 class SVM_classifier:
 
@@ -50,21 +58,26 @@ class SVM_classifier:
     self.model_port = model_port
     self.data_port = data_port
     self.labels = Port([], self.run)
+    self.output_ports = {'labels': self.labels}
 
-    def run(self):
-      model = self.model_port.get()
-      records = self.data_port.get()
-      self.labels.update([model.classify(record) for record in records])
+  def run(self):
+    model = self.model_port.get()
+    records = self.data_port.get()
+    self.labels.update([model.classify(record) for record in records])
 
-    def get_output_ports(self):
-      return [self.labels_port]
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
 
 class NaiveBayes_model:
 
   def __init__(self, training_set, labels):
     self.training_set = training_set
     self.labels = labels
-    self.output_ports = {'model': Port([], self.run)}
+    self.model_port = Port([], self.run)
+    self.output_ports = {'model': self.model_port}
 
   def run(self):
     training_set = self.training_set.get()
@@ -72,7 +85,10 @@ class NaiveBayes_model:
     self.model.update(nltk.NaiveBayesClassifier.train(zip(training_set,
                                                           labels)))
 
-  def get_output_ports(self, port):
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
     return self.output_ports[port]
 
 
@@ -81,15 +97,19 @@ class NaiveBayes_classifier:
   def __init__(self, model, data):
     self.model = model
     self.data = data
-    self.output_ports = {'labels': Port([], self.run)}
+    self.labels = Port([], self.run)
+    self.output_ports = {'labels': self.labels}
 
     def run(self):
       model = self.model.get()
       records = self.data.get()
       self.labels.update([model.classify(record) for record in records])
 
-    def get_output_ports(self, port):
-      return self.output_ports[port]
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
 
 
 class Summarizer:
@@ -105,7 +125,8 @@ class Summarizer:
     self.records_port = records_port
     self.labels_port = labels_port
     self.unigram_count = unigram_count
-    self.output_ports = {'bag-of-words': Port([], self.run)}
+    self.tokens_port = Port([], self.run)
+    self.output_ports = {'bag-of-words': self.tokens_port}
 
   @run_once
   def run(self):
@@ -116,7 +137,10 @@ class Summarizer:
     self.tokens_port.update([word for word, count in
                              dist.most_common(self.unigram_count)])
 
-  def get_output_ports(self, port):
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
     return self.output_ports[port]
 
 
@@ -125,7 +149,8 @@ class evaluater:
   def __init__(self, labels, golden):
     self.labels = labels
     self.golden = golden
-    self.output_ports = {'accuracy': Port([], self.run)}
+    self.acc = Port([], self.run)
+    self.output_ports = {'accuracy': self.acc}
 
   @run_once
   def run(self):
@@ -137,7 +162,10 @@ class evaluater:
     else:
       self.acc.update(0)
 
-  def get_output_ports(self, port):
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
     return self.output_ports[port]
 
 
@@ -155,6 +183,7 @@ class UnigramCounter(object):
     self.tokens_port = tokens_port
     self.output_port = output_port
     self.unigrams_port = Port([], self.run)
+    self.output_ports = {'unigrams': self.unigrams_port}
 
   @run_once
   def run(self):
@@ -165,7 +194,10 @@ class UnigramCounter(object):
     self.unigrams_port.update(unigrams)
 
   def get_output_ports(self):
-    return [self.unigrams_port]
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
 
 
 class SplitNode:
@@ -177,10 +209,12 @@ class SplitNode:
   Output port promises: a tuple that contains the 2 new sets
   """
 
-  def __init__(self, input_port, output_port1, output_port2):
+  def __init__(self, input_port):
     self.input_port = input_port
     self.output_port1 = Port([], self.run)
     self.output_port2 = Port([], self.run)
+    self.output_ports = {'first-set': self.output_port1, 'second-set':
+        self.output_port2}
 
   def run(self):
     # TODO Define the function to get the percentages from the port
@@ -194,18 +228,19 @@ class SplitNode:
     self.output_port1.update(out1)
     self.output_port2.update(out2)
 
-  def get_output_port1(self):
-    return [self.output_port1]
+  def get_output_ports(self):
+    return self.output_ports.keySet()
 
-  def get_output_port2(self):
-    return [self.output_port2]
+  def get_port(self, port):
+    return self.output_ports[port]
 
 class Reader:
 
   def __init__(self, input_file_path):
     self.input_file_path = input_file_path
-    self.output_ports = {'records': Port([], self.read), 'labels': Port([].
-      self.read)}
+    self.sents = Port([], self.read)
+    self.labels = Port([], self.read)
+    self.output_ports = {'records': self.sents, 'labels': self.labels}
 
   @run_once
   def read(self):
@@ -219,7 +254,10 @@ class Reader:
     self.sents.update(sents)
     self.labels.update(labels)
 
-  def get_output_ports(self, port):
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
     return self.output_ports[port]
 
 class Port:
