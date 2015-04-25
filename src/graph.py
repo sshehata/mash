@@ -23,6 +23,35 @@ class RemoveUrls:
   def get_output_ports(self):
     return [self.output_port]
 
+class SVM_model:
+  def __init__(self, training_set_port, labels_port):
+    self.training_set_port = training_set_port
+    self.labels_port = labels_port
+    self.model_port = Port([], self.run)
+
+  def run(self):
+    training_set = self.training_set_port.get()
+    labels = self.labels_port.get()
+    classif = nltk.classify.scikitlearn.SklearnClassifier(sklearn.svm.LinearSVC())
+    self.model_port.update(classif.train(zip(training_set, labels)))
+
+  def get_output_ports(self):
+    return [self.model_port]
+
+class SVM_classifier:
+  def __init__(self, model_port, data_port):
+    self.model_port = model_port
+    self.data_port = data_port
+    self.labels = Port([], self.run)
+
+    def run(self):
+      model = self.model_port.get()
+      records = self.data_port.get()
+      self.labels.update([model.classify(record) for record in records])
+
+    def get_output_ports(self):
+      return [self.labels_port]
+
 class NaiveBayes_model:
   def __init__(self, training_set, labels):
     self.training_set = training_set
