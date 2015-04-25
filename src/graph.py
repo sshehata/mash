@@ -266,6 +266,23 @@ class Reader:
   def get_port(self, port):
     return self.output_ports[port]
 
+class POSTagger:
+  def __init__(self, data_port):
+    self.data_port = data_port
+    self.tagged_data_port = Port([], self.run)
+    self.output_ports = {'POS-tagged': self.tagged_data_port}
+
+  @run_once
+  def run(self):
+    data = self.data_port.get()
+    tags = [[tag for (word, tag) in nltk.pos_tag(record)] for record in data]
+    self.tagged_data_port.update(tags)
+
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
 
 class Port:
   # TODO Update the active set of flags
@@ -284,20 +301,3 @@ class Port:
 
   def update(self, data):
     self.data = data
-
-
-class POSTagger:
-
-  def __init__(self, data_port):
-    self.data_port = data_port
-    self.tagged_data_port = Port([], self.run)
-
-
-  @run_once
-  def run(self):
-    data = self.data_port.get()
-    tags = [[tag for (word, tag) in nltk.pos_tag(record)] for record in data]
-    self.tagged_data_port.update(tags)
-
-  def get_output_ports(self):
-    return [tagged_data_port]
