@@ -1,7 +1,11 @@
-import re, nltk, csv
 from decorators import run_once
+import csv
+import nltk
+import re
+
 
 class RemoveUrls:
+
   """
   Type: Node
   Function: Replace urls from raw text.
@@ -17,13 +21,15 @@ class RemoveUrls:
 
   def run(self):
     records = self.input_port.get()
-    records = [re.sub(RemoveUrls.URL_REGEX, "URL", record) for record in records]
+    records = [re.sub(RemoveUrls.URL_REGEX, "URL", record)
+               for record in records]
     self.output_port.update(records)
 
   def get_output_ports(self):
     return [self.output_port]
 
 class SVM_model:
+
   def __init__(self, training_set_port, labels_port):
     self.training_set_port = training_set_port
     self.labels_port = labels_port
@@ -39,6 +45,7 @@ class SVM_model:
     return [self.model_port]
 
 class SVM_classifier:
+
   def __init__(self, model_port, data_port):
     self.model_port = model_port
     self.data_port = data_port
@@ -53,6 +60,7 @@ class SVM_classifier:
       return [self.labels_port]
 
 class NaiveBayes_model:
+
   def __init__(self, training_set, labels):
     self.training_set = training_set
     self.labels = labels
@@ -61,13 +69,15 @@ class NaiveBayes_model:
   def run(self):
     training_set = self.training_set.get()
     labels = self.labels.get()
-    self.model.update(nltk.NaiveBayesClassifier.train( zip(training_set,
-        labels)))
+    self.model.update(nltk.NaiveBayesClassifier.train(zip(training_set,
+                                                          labels)))
 
   def get_output_ports(self):
     return [self.model]
 
+
 class NaiveBayes_classifier:
+
   def __init__(self, model, data):
     self.model = model
     self.data = data
@@ -81,7 +91,9 @@ class NaiveBayes_classifier:
     def get_output_ports(self):
       return [self.labels]
 
+
 class Summarizer:
+
   """
   Type: Node
   Function: Summarizes tokenized records into most useful.
@@ -99,15 +111,17 @@ class Summarizer:
   def run(self):
     records = self.records_port.get()
     labels = self.labels_port.get()
-    dist = nltk.FreqDist(token for record in records for token in record if \
-        token not in nltk.corpus.stopwords.words(english) and token.isalpha())
-    self.tokens_port.update([word for word, count in \
-        dist.most_common(self.unigram_count)])
+    dist = nltk.FreqDist(token for record in records for token in record if
+                         token not in nltk.corpus.stopwords.words(english) and token.isalpha())
+    self.tokens_port.update([word for word, count in
+                             dist.most_common(self.unigram_count)])
 
   def get_output_ports(self):
     return [self.tokens_port]
 
+
 class evaluater:
+
   def __init__(self, labels, golden):
     self.labels = labels
     self.golden = golden
@@ -117,14 +131,75 @@ class evaluater:
   def run(self):
     labels = self.labels
     golden = self.golden
-    correct = [ l == g for (l, g) in zip(labels, golden) ]
+    correct = [l == g for (l, g) in zip(labels, golden)]
     if correct:
-      self.acc.update(float(sum(correct))/len(correct))
+      self.acc.update(float(sum(correct)) / len(correct))
     else:
       self.acc.update(0)
 
   def get_output_ports(self):
     return [self.acc]
+
+
+class UnigramCounter(object):
+
+  """
+  Type: Node
+  Function: Counts unigrams in text.
+  Input port requirements: RAW_TEXT
+  Output port promises: UNIGRAMS
+  """
+
+  def __init__(self, data_port, tokens_port, output_port):
+    self.data_port = data_port
+    self.tokens_port = tokens_port
+    self.output_port = output_port
+    self.unigrams_port = Port([], self.run)
+
+  @run_once
+  def run(self):
+    data = self.data_port.get()
+    most_frequent_tokens = tokens_port.get()
+    unigrams = [
+        [record.count(token) for token in most_frequent_tokens] for record in data]
+    self.unigrams_port.update(unigrams)
+
+  def get_output_ports(self):
+    return [self.unigrams_port]
+
+
+class SplitNode:
+
+  """
+  Type: Node
+  Function: Splits the dataset into 2 sets
+  Input port requirements: DATASET, PERCENTAGES
+  Output port promises: a tuple that contains the 2 new sets
+  """
+
+  def __init__(self, input_port, output_port1, output_port2):
+    self.input_port = input_port
+    self.output_port1 = Port([], self.run)
+    self.output_port2 = Port([], self.run)
+
+  def run(self):
+    # TODO Define the function to get the percentages from the port
+    # TODO Define the function to set the output port splitsets
+    # TODO Agree on the output ports features
+    dataset = self.input_port.get()
+    out1_percentage, out2_percentage = input_port.get_percentages()
+    out1_end = int(out1_percentage * len(dataset))
+    out1 = dataset[:out1_end]
+    out2 = dataset[out1_end:]
+    self.output_port1.update(out1)
+    self.output_port2.update(out2)
+
+  def get_output_port1(self):
+    return [self.output_port1]
+
+  def get_output_port2(self):
+    return [self.output_port2]
+
 
 class Port:
   # TODO Update the active set of flags
@@ -143,6 +218,7 @@ class Port:
 
   def update(self, data):
     self.data = data
+
 
 class Reader:
 
@@ -164,5 +240,3 @@ class Reader:
 
   def get_output_ports(self):
     return [self.sents, self.labels]
-
-
