@@ -34,8 +34,8 @@ class Summarizer:
   def __init__(self, records_port, labels_port, unigram_count=150):
     self.records_port = records_port
     self.labels_port = labels_port
-    self.tokens_port = Port([], self.run)
     self.unigram_count = unigram_count
+    self.tokens_port = Port([], self.run)
 
   @run_once
   def run(self):
