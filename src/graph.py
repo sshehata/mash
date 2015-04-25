@@ -23,6 +23,35 @@ class RemoveUrls:
   def get_output_ports(self):
     return [self.output_port]
 
+class NaiveBayes_model:
+  def __init__(self, training_set, labels):
+    self.training_set = training_set
+    self.labels = labels
+    self.model = Port([], self.run)
+
+  def run(self):
+    training_set = self.training_set.get()
+    labels = self.labels.get()
+    self.model.update(nltk.NaiveBayesClassifier.train( zip(training_set,
+        labels)))
+
+  def get_output_ports(self):
+    return [self.model]
+
+class NaiveBayes_classifier:
+  def __init__(self, model, data):
+    self.model = model
+    self.data = data
+    self.labels = Port([], self.run)
+
+    def run(self):
+      model = self.model.get()
+      records = self.data.get()
+      self.labels.update([model.classify(record) for record in records])
+
+    def get_output_ports(self):
+      return [self.labels]
+
 class Summarizer:
   """
   Type: Node
@@ -49,6 +78,24 @@ class Summarizer:
   def get_output_ports(self):
     return [self.tokens_port]
 
+class evaluater:
+  def __init__(self, labels, golden):
+    self.labels = labels
+    self.golden = golden
+    self.acc = Port([], self.run)
+
+  @run_once
+  def run(self):
+    labels = self.labels
+    golden = self.golden
+    correct = [ l == g for (l, g) in zip(labels, golden) ]
+    if correct:
+      self.acc.update(float(sum(correct))/len(correct))
+    else:
+      self.acc.update(0)
+
+  def get_output_ports(self):
+    return [self.acc]
 
 class Port:
   # TODO Update the active set of flags
@@ -62,7 +109,7 @@ class Port:
 
   def get(self):
     if not self.data:
-        self.ex_func()
+      self.ex_func()
     return self.data
 
   def update(self, data):
