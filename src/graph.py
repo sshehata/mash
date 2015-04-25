@@ -32,6 +32,7 @@ class RemoveUrls:
   def get_port(self, port):
     return self.output_ports[port]
 
+
 class SVM_model:
 
   def __init__(self, training_set_port, labels_port):
@@ -40,10 +41,12 @@ class SVM_model:
     self.model_port = Port([], self.run)
     self.output_ports = {'model': self.model_port }
 
+  @run_once
   def run(self):
     training_set = self.training_set_port.get()
     labels = self.labels_port.get()
-    classif = nltk.classify.scikitlearn.SklearnClassifier(sklearn.svm.LinearSVC())
+    classif = nltk.classify.scikitlearn.SklearnClassifier(
+        sklearn.svm.LinearSVC())
     self.model_port.update(classif.train(zip(training_set, labels)))
 
   def get_output_ports(self):
@@ -51,6 +54,7 @@ class SVM_model:
 
   def get_port(self, port):
     return self.output_ports[port]
+
 
 class SVM_classifier:
 
@@ -60,6 +64,7 @@ class SVM_classifier:
     self.labels = Port([], self.run)
     self.output_ports = {'labels': self.labels}
 
+  @run_once
   def run(self):
     model = self.model_port.get()
     records = self.data_port.get()
@@ -100,10 +105,10 @@ class NaiveBayes_classifier:
     self.labels = Port([], self.run)
     self.output_ports = {'labels': self.labels}
 
-    def run(self):
-      model = self.model.get()
-      records = self.data.get()
-      self.labels.update([model.classify(record) for record in records])
+  def run(self):
+    model = self.model.get()
+    records = self.data.get()
+    self.labels.update([model.classify(record) for record in records])
 
   def get_output_ports(self):
     return self.output_ports.keySet()
@@ -234,6 +239,7 @@ class SplitNode:
   def get_port(self, port):
     return self.output_ports[port]
 
+
 class Reader:
 
   def __init__(self, input_file_path):
@@ -260,6 +266,7 @@ class Reader:
   def get_port(self, port):
     return self.output_ports[port]
 
+
 class Port:
   # TODO Update the active set of flags
 
@@ -277,3 +284,20 @@ class Port:
 
   def update(self, data):
     self.data = data
+
+
+class POSTagger:
+
+  def __init__(self, data_port):
+    self.data_port = data_port
+    self.tagged_data_port = Port([], self.run)
+
+
+  @run_once
+  def run(self):
+    data = self.data_port.get()
+    tags = [[tag for (word, tag) in nltk.pos_tag(record)] for record in data]
+    self.tagged_data_port.update(tags)
+
+  def get_output_ports(self):
+    return [tagged_data_port]
