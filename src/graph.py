@@ -136,4 +136,21 @@ class Reader:
   def get_output_ports(self):
     return [self.sents, self.labels]
 
+class Tokenizer:
 
+  def __init__(self, records):
+    self.records = records
+    self.tokenized_records = Port([], self.run)
+    self.output_ports = {"tokenized_records" : self.tokenized_records}
+
+  def run(self):
+    tokenized_recs = []
+    for tweet in self.records:
+      tokenized_recs = tokenized_recs + [nltk.word_tokenize(tweet)]
+    self.tokenized_records.update(tokenized_recs)
+  
+  def get_output_ports(self):
+    return self.output_ports.keySet()
+
+  def get_port(self, port):
+    return self.output_ports[port]
