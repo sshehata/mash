@@ -35,6 +35,7 @@ class SVM_model:
     self.labels_port = labels_port
     self.model_port = Port([], self.run)
 
+  @run_once
   def run(self):
     training_set = self.training_set_port.get()
     labels = self.labels_port.get()
@@ -51,13 +52,14 @@ class SVM_classifier:
     self.data_port = data_port
     self.labels = Port([], self.run)
 
-    def run(self):
-      model = self.model_port.get()
-      records = self.data_port.get()
-      self.labels.update([model.classify(record) for record in records])
+  @run_once
+  def run(self):
+    model = self.model_port.get()
+    records = self.data_port.get()
+    self.labels.update([model.classify(record) for record in records])
 
-    def get_output_ports(self):
-      return [self.labels_port]
+  def get_output_ports(self):
+    return [self.labels_port]
 
 class NaiveBayes_model:
 
@@ -83,13 +85,13 @@ class NaiveBayes_classifier:
     self.data = data
     self.labels = Port([], self.run)
 
-    def run(self):
-      model = self.model.get()
-      records = self.data.get()
-      self.labels.update([model.classify(record) for record in records])
+  def run(self):
+    model = self.model.get()
+    records = self.data.get()
+    self.labels.update([model.classify(record) for record in records])
 
-    def get_output_ports(self):
-      return [self.labels]
+  def get_output_ports(self):
+    return [self.labels]
 
 
 class Summarizer:
