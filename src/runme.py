@@ -1,25 +1,22 @@
-from data import DataObject
-from graph import RemoveUrls, Port, Reader, Tokenizer
-from unigram_counter import UnigramCounter
+from graph import *
 
 tweets = ["www.google.com", "facebook.com that controls my life www.grooveshark.com which I love."]
-ip1 = Port([], None)
-ip1.update(tweets)
-node = RemoveUrls(ip1)
-#ip2 = op1
-#op2 = Port([])
-#node_unigram = UnigramCounter(ip2, op2)
-#node_unigram.run()
-node_reader = Reader('tweets.csv')
-node_reader.read()
-tweets = node_reader.get_output_ports()[0].get()
-#print node_reader.get_output_ports()[0].get()
-#print node_reader.get_output_ports()[1].get()
-#print tweets
-#print node.get_output_ports()[0].get()
-node_tok = Tokenizer(tweets)
-node_tok.run()
-out = node_tok.get_port("tokenized_records")
-for o1 in out.get():
-    for o2 in o1:
-        print(o2 + "\n")
+
+tweeets = [["I", "am", "a", "bad", "coder"]]
+
+reader = Reader("tweets.csv")
+tokenizer = Tokenizer(reader.get_port("records"))
+summarizer = Summarizer(tokenizer.get_port("tokenized_records"))
+unigramer = UnigramCounter(tokenizer.get_port("tokenized_records"),
+    summarizer.get_port("bag-of-words"))
+unigram_splitter = SplitNode(unigramer.get_port("unigrams"))
+label_splitter = SplitNode(reader.get_port("labels"))
+trainer = NaiveBayes_model(unigram_splitter.get_port("first-set"),
+    label_splitter.get_port("first-set"))
+classifier = NaiveBayes_classifier(trainer.get_port("model"),
+    unigram_splitter.get_port("second-set"))
+
+evaluater = Evaluater(classifier.get_port("labels"),
+    label_splitter.get_port("second-set"))
+
+print("The accuracy of the pipeline is", evaluater.get_port("accuracy").get())

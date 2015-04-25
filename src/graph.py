@@ -87,7 +87,7 @@ class NaiveBayes_model:
   def run(self):
     training_set = self.training_set.get()
     labels = self.labels.get()
-    self.model.update(nltk.NaiveBayesClassifier.train(zip(training_set,
+    self.model_port.update(nltk.NaiveBayesClassifier.train(zip(training_set,
                                                           labels)))
 
   def get_output_ports(self):
@@ -126,9 +126,8 @@ class Summarizer:
   Output port promises: no changes
   """
 
-  def __init__(self, records_port, labels_port, unigram_count=150):
+  def __init__(self, records_port, unigram_count=150):
     self.records_port = records_port
-    self.labels_port = labels_port
     self.unigram_count = unigram_count
     self.tokens_port = Port([], self.run)
     self.output_ports = {'bag-of-words': self.tokens_port}
@@ -136,9 +135,8 @@ class Summarizer:
   @run_once
   def run(self):
     records = self.records_port.get()
-    labels = self.labels_port.get()
     dist = nltk.FreqDist(token for record in records for token in record if
-                         token not in nltk.corpus.stopwords.words(english) and token.isalpha())
+                         token not in nltk.corpus.stopwords.words("english") and token.isalpha())
     self.tokens_port.update([word for word, count in
                              dist.most_common(self.unigram_count)])
 
@@ -149,23 +147,23 @@ class Summarizer:
     return self.output_ports[port]
 
 
-class evaluater:
+class Evaluater:
 
-  def __init__(self, labels, golden):
-    self.labels = labels
-    self.golden = golden
-    self.acc = Port([], self.run)
-    self.output_ports = {'accuracy': self.acc}
+  def __init__(self, labels_port, golden_port):
+    self.labels_port = labels_port
+    self.golden_port = golden_port
+    self.acc_port = Port([], self.run)
+    self.output_ports = {'accuracy': self.acc_port}
 
   @run_once
   def run(self):
-    labels = self.labels
-    golden = self.golden
+    labels = self.labels_port.get()
+    golden = self.golden_port.get()
     correct = [l == g for (l, g) in zip(labels, golden)]
     if correct:
-      self.acc.update(float(sum(correct)) / len(correct))
+      self.acc_port.update(float(sum(correct)) / len(correct))
     else:
-      self.acc.update(0)
+      self.acc_port.update(0)
 
   def get_output_ports(self):
     return self.output_ports.keys()
@@ -183,17 +181,16 @@ class UnigramCounter(object):
   Output port promises: UNIGRAMS
   """
 
-  def __init__(self, data_port, tokens_port, output_port):
+  def __init__(self, data_port, tokens_port):
     self.data_port = data_port
     self.tokens_port = tokens_port
-    self.output_port = output_port
     self.unigrams_port = Port([], self.run)
     self.output_ports = {'unigrams': self.unigrams_port}
 
   @run_once
   def run(self):
     data = self.data_port.get()
-    most_frequent_tokens = tokens_port.get()
+    most_frequent_tokens = self.tokens_port.get()
     unigrams = [
         [record.count(token) for token in most_frequent_tokens] for record in data]
     self.unigrams_port.update(unigrams)
@@ -214,8 +211,9 @@ class SplitNode:
   Output port promises: a tuple that contains the 2 new sets
   """
 
-  def __init__(self, input_port):
+  def __init__(self, input_port, ratio=0.8):
     self.input_port = input_port
+    self.ratio = ratio
     self.output_port1 = Port([], self.run)
     self.output_port2 = Port([], self.run)
     self.output_ports = {'first-set': self.output_port1, 'second-set':
@@ -226,8 +224,7 @@ class SplitNode:
     # TODO Define the function to set the output port splitsets
     # TODO Agree on the output ports features
     dataset = self.input_port.get()
-    out1_percentage, out2_percentage = input_port.get_percentages()
-    out1_end = int(out1_percentage * len(dataset))
+    out1_end = int(self.ratio * len(dataset))
     out1 = dataset[:out1_end]
     out2 = dataset[out1_end:]
     self.output_port1.update(out1)
@@ -252,7 +249,7 @@ class Reader:
   def read(self):
     sents = []
     labels = []
-    csv_file = open(self.input_file_path, 'rb')
+    csv_file = open(self.input_file_path, 'r')
     csv_reader = csv.reader(csv_file)
     for row in csv_reader:
       sents += [row[0]]
@@ -269,17 +266,17 @@ class Reader:
 
 class Tokenizer:
 
-  def __init__(self, records):
-    self.records = records
-    self.tokenized_records = Port([], self.run)
-    self.output_ports = {"tokenized_records" : self.tokenized_records}
+  def __init__(self, records_port):
+    self.records_port = records_port
+    self.tokenized_records_port = Port([], self.run)
+    self.output_ports = {"tokenized_records" : self.tokenized_records_port}
 
   def run(self):
     tokenized_recs = []
-    for tweet in self.records:
+    for tweet in self.records_port.get():
       tokenized_recs = tokenized_recs + [nltk.word_tokenize(tweet)]
-    self.tokenized_records.update(tokenized_recs)
-  
+    self.tokenized_records_port.update(tokenized_recs)
+
   def get_output_ports(self):
     return self.output_ports.keys()
 
