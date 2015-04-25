@@ -117,23 +117,23 @@ class Port:
 
 class Reader:
 
-    def __init__(self, input_file_path):
-        self.input_file_path = input_file_path
-        self.sents = Port([], self.read)
-        self.labels = Port([], self.read)
+  def __init__(self, input_file_path):
+    self.input_file_path = input_file_path
+    self.sents = Port([], self.read)
+    self.labels = Port([], self.read)
 
-    def read(self):
-        sents = []
-        labels = []
-        csv_file = open(self.input_file_path, 'rb')
-        csv_reader = csv.reader(csv_file)
-        for row in csv_reader:
-            sents += [row[0]]
-            labels += [row[1]]
-        self.sents.update(sents)
-        self.labels.update(labels)
+  def read(self):
+    sents = []
+    labels = []
+    csv_file = open(self.input_file_path, 'rb')
+    csv_reader = csv.reader(csv_file)
+    for row in csv_reader:
+      sents += [row[0]]
+      labels += [row[1]]
+    self.sents.update(sents)
+    self.labels.update(labels)
 
-    def get_output_ports(self):
-        return [self.sents, self.labels]
+  def get_output_ports(self):
+    return [self.sents, self.labels]
 
 
