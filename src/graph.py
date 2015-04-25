@@ -1,4 +1,4 @@
-import re, nltk
+import re, nltk, csv
 from decorators import run_once
 
 class RemoveUrls:
@@ -20,7 +20,7 @@ class RemoveUrls:
     records = [re.sub(RemoveUrls.URL_REGEX, "URL", record) for record in records]
     self.output_port.update(records)
 
-  def get_ouput_ports(self):
+  def get_output_ports(self):
     return [self.output_port]
 
 class Summarizer:
@@ -46,7 +46,7 @@ class Summarizer:
     self.tokens_port.update([word for word, count in \
         dist.most_common(self.unigram_count)])
 
-  def get_ouput_ports(self):
+  def get_output_ports(self):
     return [self.tokens_port]
 
 
@@ -67,3 +67,26 @@ class Port:
 
   def update(self, data):
     self.data = data
+
+class Reader:
+
+    def __init__(self, input_file_path):
+        self.input_file_path = input_file_path
+        self.sents = Port([], self.read)
+        self.labels = Port([], self.read)
+
+    def read(self):
+        sents = []
+        labels = []
+        csv_file = open(self.input_file_path, 'rb')
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            sents += [row[0]]
+            labels += [row[1]]
+        self.sents.update(sents)
+        self.labels.update(labels)
+
+    def get_output_ports(self):
+        return [self.sents, self.labels]
+
+
