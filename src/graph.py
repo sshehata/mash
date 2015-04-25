@@ -27,7 +27,7 @@ class RemoveUrls:
     self.training_set.update(records)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -50,7 +50,7 @@ class SVM_model:
     self.model_port.update(classif.train(zip(training_set, labels)))
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -71,7 +71,7 @@ class SVM_classifier:
     self.labels.update([model.classify(record) for record in records])
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -91,7 +91,7 @@ class NaiveBayes_model:
                                                           labels)))
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -111,7 +111,7 @@ class NaiveBayes_classifier:
     self.labels.update([model.classify(record) for record in records])
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -143,7 +143,7 @@ class Summarizer:
                              dist.most_common(self.unigram_count)])
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -168,7 +168,7 @@ class evaluater:
       self.acc.update(0)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -199,7 +199,7 @@ class UnigramCounter(object):
     self.unigrams_port.update(unigrams)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -234,7 +234,7 @@ class SplitNode:
     self.output_port2.update(out2)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -261,7 +261,7 @@ class Reader:
     self.labels.update(labels)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -281,7 +281,7 @@ class Tokenizer:
     self.tokenized_records.update(tokenized_recs)
   
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
@@ -299,7 +299,7 @@ class POSTagger:
     self.tagged_data_port.update(tags)
 
   def get_output_ports(self):
-    return self.output_ports.keySet()
+    return self.output_ports.keys()
 
   def get_port(self, port):
     return self.output_ports[port]
