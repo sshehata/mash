@@ -1,4 +1,4 @@
-import re, nltk
+import re, nltk, csv
 from decorators import run_once
 
 class RemoveUrls:
@@ -20,16 +20,20 @@ class RemoveUrls:
     records = [re.sub(RemoveUrls.URL_REGEX, "URL", record) for record in records]
     self.output_port.update(records)
 
-  def get_ouput_ports(self):
+  def get_output_ports(self):
     return [self.output_port]
 
 class NaiveBayes_model:
-  def __init__(self, training_set):
+  def __init__(self, training_set, labels):
     self.training_set = training_set
+    self.labels = labels
     self.model = Port([], self.run)
 
   def run(self):
-    self.model.update(nltk.NaiveBayesClassifier.train(training_set.get()))
+    training_set = self.training_set.get()
+    labels = self.labels.get()
+    self.model.update(nltk.NaiveBayesClassifier.train( zip(training_set,
+        labels)))
 
   def get_output_ports(self):
     return [self.model]
@@ -71,8 +75,27 @@ class Summarizer:
     self.tokens_port.update([word for word, count in \
         dist.most_common(self.unigram_count)])
 
-  def get_ouput_ports(self):
+  def get_output_ports(self):
     return [self.tokens_port]
+
+class evaluater:
+  def __init__(self, labels, golden):
+    self.labels = labels
+    self.golden = golden
+    self.acc = Port([], self.run)
+
+  @run_once
+  def run(self):
+    labels = self.labels
+    golden = self.golden
+    correct = [ l == g for (l, g) in zip(labels, golden) ]
+    if correct:
+      self.acc.update(float(sum(correct))/len(correct))
+    else:
+      self.acc.update(0)
+
+  def get_output_ports(self):
+    return [self.acc]
 
 class Port:
   # TODO Update the active set of flags
@@ -86,8 +109,31 @@ class Port:
 
   def get(self):
     if not self.data:
-        self.ex_func()
+      self.ex_func()
     return self.data
 
   def update(self, data):
     self.data = data
+
+class Reader:
+
+  def __init__(self, input_file_path):
+    self.input_file_path = input_file_path
+    self.sents = Port([], self.read)
+    self.labels = Port([], self.read)
+
+  def read(self):
+    sents = []
+    labels = []
+    csv_file = open(self.input_file_path, 'rb')
+    csv_reader = csv.reader(csv_file)
+    for row in csv_reader:
+      sents += [row[0]]
+      labels += [row[1]]
+    self.sents.update(sents)
+    self.labels.update(labels)
+
+  def get_output_ports(self):
+    return [self.sents, self.labels]
+
+
