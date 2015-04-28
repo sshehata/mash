@@ -15,8 +15,6 @@ trainer = NaiveBayes_model(unigram_splitter.get_port("first-set"),
     label_splitter.get_port("first-set"))
 classifier = NaiveBayes_classifier(trainer.get_port("model"),
     unigram_splitter.get_port("second-set"))
-
 evaluater = Evaluater(classifier.get_port("labels"),
     label_splitter.get_port("second-set"))
-
 print("The accuracy of the pipeline is", evaluater.get_port("accuracy").get())

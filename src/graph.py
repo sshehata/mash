@@ -1,7 +1,9 @@
 from decorators import run_once
+import sklearn
 import csv
 import nltk
 import re
+import random
 
 
 class RemoveUrls:
@@ -47,7 +49,7 @@ class SVM_model:
     labels = self.labels_port.get()
     classif = nltk.classify.scikitlearn.SklearnClassifier(
         sklearn.svm.LinearSVC())
-    self.model_port.update(classif.train(zip(training_set, labels)))
+    self.model_port.update(classify.train(zip(training_set, labels)))
 
   def get_output_ports(self):
     return self.output_ports.keys()
@@ -87,8 +89,9 @@ class NaiveBayes_model:
   def run(self):
     training_set = self.training_set.get()
     labels = self.labels.get()
-    self.model_port.update(nltk.NaiveBayesClassifier.train(zip(training_set,
-                                                          labels)))
+    training_set = zip([dict(enumerate(record)) for record in training_set],
+        labels)
+    self.model_port.update(nltk.NaiveBayesClassifier.train(training_set))
 
   def get_output_ports(self):
     return self.output_ports.keys()
@@ -108,7 +111,7 @@ class NaiveBayes_classifier:
   def run(self):
     model = self.model.get()
     records = self.data.get()
-    self.labels.update([model.classify(record) for record in records])
+    self.labels.update([model.classify(dict(enumerate(record))) for record in records])
 
   def get_output_ports(self):
     return self.output_ports.keys()
@@ -252,8 +255,13 @@ class Reader:
     csv_file = open(self.input_file_path, 'r')
     csv_reader = csv.reader(csv_file)
     for row in csv_reader:
-      sents += [row[0]]
-      labels += [row[1]]
+      sents += [row[5]]
+      labels += [row[0]]
+
+    zipped = zip(sents,labels)
+    random.shuffle(zipped)
+    sents[:], labels[:] = zip(*zipped)
+
     self.sents.update(sents)
     self.labels.update(labels)
 
@@ -274,7 +282,11 @@ class Tokenizer:
   def run(self):
     tokenized_recs = []
     for tweet in self.records_port.get():
-      tokenized_recs = tokenized_recs + [nltk.word_tokenize(tweet)]
+      try:
+        tokenized_recs = tokenized_recs + \
+        [nltk.word_tokenize(tweet.encode('utf-8'))]
+      except:
+        pass
     self.tokenized_records_port.update(tokenized_recs)
 
   def get_output_ports(self):
